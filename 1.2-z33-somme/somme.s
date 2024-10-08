@@ -4,10 +4,12 @@
 .addr 2000
 somme:
         cmp 0, %b
-        jle endSomme //a changer
-        push %a
-        ld [%a], %a
+        jge endSomme 
         push %b
+        ld [%a], %b
+        push %a
+        add 1, %a
+        ld [%a], %a
         add %a, %b
         pop %a
         add 1, %a
@@ -23,17 +25,15 @@ endSomme:
 main_somme:
         push %b
         ld 3, %b
-        ld [tab], %a
+        ld tab, %a
         call somme
         pop %b
         reset
 
-
-
 tab:
         // tab_0
-        .word 2
+        .word 1
         // tab_1
-        .word -3
+        .word 2
         // tab_2
-        .word -7
+        .word 3
