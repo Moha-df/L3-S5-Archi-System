@@ -3,7 +3,7 @@
 // programme "somme" placé à l'adresse 2000
 .addr 2000
 somme:
-        cmp 0, %b
+        cmp 1, %b
         jge endSomme 
         push %b
         ld [%a], %b
@@ -19,6 +19,7 @@ somme:
         jmp somme
 endSomme:
         ld [%a], %a
+        reset
         rtn
         
 
