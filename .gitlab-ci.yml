@@ -1,0 +1,13 @@
+default:
+  image: registry.app.unistra.fr/pda/refc/refc
+
+pages:
+  script:
+    - sh -x .gen-log.sh
+  cache:
+    untracked: true
+  artifacts:
+    paths:
+      - public
+  only:
+    - main

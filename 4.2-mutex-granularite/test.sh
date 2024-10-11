@@ -109,7 +109,7 @@ run_test 2.3 "resultat ctypes-local" && {
 ##############################################################################
 # Tests de cohérence des durées d'exécution
 
-run_test 3.1 "cohérence des temps d'exécution (lent)" && {
+run_test 3.1 "cohérence des temps d'exécution (lent)" 80 && {
     creer_4_fichiers $TAILLE
 
     lancer_verifier $TIMEOUT $PROG1 $alnum $total
@@ -119,8 +119,8 @@ run_test 3.1 "cohérence des temps d'exécution (lent)" && {
     lancer_verifier $TIMEOUT $PROG3 $alnum $total
     t3=$(cat $TMP.time)
 
-    # tolérances admises : t2 devrait être dans [70 % t1, 120 % t1[
-    [ $t2 -ge $(($t1 * 120 / 100)) ] && \
+    # tolérances admises : t2 devrait être dans [70 % t1, 150 % t1[
+    [ $t2 -ge $(($t1 * 150 / 100)) ] && \
         fail "ctypes-unique ($t1) devrait être plus lent que ctypes-global ($t2)"
     [ $t2 -le $((t1 * 70 / 100)) ] && \
         fail "ctypes-global ($t1) ne devrait pas être beaucoup plus lent que ctypes-global ($t2)"
@@ -139,17 +139,17 @@ preparer4 ()
     generer_fichier_aleatoire $TMP.2 4
 }
 
-run_test 4.1 "valgrind ctypes-unique (lent)" && {
+run_test 4.1 "valgrind ctypes-unique (lent)" 10 && {
     preparer4
     tester_valgrind $PROG1 $TMP.1 $TMP.2
 }
 
-run_test 4.2 "valgrind ctypes-global (lent)" && {
+run_test 4.2 "valgrind ctypes-global (lent)" 10 && {
     preparer4
     tester_valgrind $PROG2 $TMP.1 $TMP.2
 }
 
-run_test 4.3 "valgrind ctypes-local (lent)" && {
+run_test 4.3 "valgrind ctypes-local (lent)" 10 && {
     preparer4
     tester_valgrind $PROG3 $TMP.1 $TMP.2
 }

@@ -54,6 +54,10 @@ Pour en profiter au maximum :
     sous-produits de la compilation
   - ne cherchez pas à gérer de multiples branches
 
+Vous pouvez également consulter le résultat des tests en ligne,
+en vous rendant sur :
+    https://l3ase.pages.unistra.fr/_votre-nom-de-login_
+
 ## Scripts de test
 
 La plupart des exercices sont fournis avec un script de test (fichier
@@ -105,6 +109,9 @@ Ces options peuvent naturellement être combinées :
 
     ./test.sh -v -k 2.3 3.1
     ./test.sh -vk 2.3 3.1
+
+Enfin, l'option **-d** affiche la durée maximum (en secondes) que devrait
+prendre l'ensemble des tests (ou la somme des tests sélectionnés).
 
 ## Rappel de langage C : la compilation conditionnelle
 

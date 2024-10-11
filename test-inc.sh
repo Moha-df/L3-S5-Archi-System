@@ -28,9 +28,14 @@
 # L'option -h (help) rappelle la syntaxe
 # L'option -t (terse) affiche le résultat des tests de façon sobre
 # L'option -k (keep) conserve les fichiers même si le dernier test réussit
+# L'option -d (duration) n'exécute pas les tests, mais retourne une estimation
+# 	de la durée maximum, pour utilisation par des scripts appelants
 #
 
 TMP=${TMP:=/tmp/test.$USER}		# chemin des logs de test
+
+# Durée maximum (par défaut) de chaque test individuel
+MAXDUR=${MAXDUR:=2}			# en secondes
 
 # Conserver la locale d'origine
 OLDLOCALE=$(locale)
@@ -47,6 +52,18 @@ TEST_EN_COURS=""			# sinon : numéro de test
 # fonction à appeler pour le nettoyage à la fin de chaque test (réussi)
 NETTOYER=nettoyer
 
+# durée estimée (pour l'option -d)
+DUREE_ESTIMEE=0
+
+if [ "${BASH:=heureusement-non}" != "heureusement-non" ]
+then
+    (
+	echo "Vous exécutez ce script avec 'bash', non compatible avec POSIX"
+	echo "Il y a des problèmes d'affichage avec ce Shell."
+	echo "Préférez 'dash' ou un autre shell : dash ./test.sh ...."
+    ) >&2
+fi
+
 ##############################################################################
 # Mécanique de gestion des tests : échec, réussite, tests à ne pas faire, etc.
 
@@ -58,7 +75,9 @@ TEST_EN_COURS="init"
 # argument : message d'erreur
 fail ()
 {
-    set +x				# supprimer le mode verbeux si besoin
+    if [ "$VERBOSE" = vrai ]
+    then set +x				# supprimer le mode verbeux si besoin
+    fi
 
     local msg="$1"
 
@@ -96,7 +115,7 @@ success ()
 {
     [ $# != 0 ] && fail "ERREUR SYNTAXE success"
 
-    if [ "$TEST_EN_COURS" != "" ] && [ "$TEST_EN_COURS" != init ]
+    if [ "$DUREE" = faux ] && [ "$TEST_EN_COURS" != "" ] && [ "$TEST_EN_COURS" != init ]
     then
 	if [ "$TERSE" = vrai ]
 	then echo "success $TEST_EN_COURS"
@@ -110,6 +129,13 @@ success ()
 fin ()
 {
     [ $# != 0 ] && fail "ERREUR SYNTAXE fin"
+
+    if [ "$DUREE" = vrai ]
+    then
+	# afficher la durée estimée (on n'a pas fait les tests)
+	echo $DUREE_ESTIMEE
+	exit 0
+    fi
 
     if [ x"$TEST_EN_COURS" != "" ]
     then
@@ -152,13 +178,22 @@ strlen ()
 # Décide s'il faut faire un test et si c'est le cas, l'annonce
 # $1 = numéro du test
 # $2 = intitulé
+# $3 (optionnel) = durée maximum autorisée pour le test (défaut = $MAXDUR)
 # retourne : vrai ou faux s'il ne faut pas le faire
 run_test ()
 {
-    set +x		# supprimer le mode verbeux s'il existait
+    if [ "$VERBOSE" = vrai ]
+    then set +x		# supprimer le mode verbeux si besoin
+    fi
 
-    [ $# != 2 ] && fail "ERREUR SYNTAXE run_test"
+    [ $# != 2 -a $# != 3 ] && fail "ERREUR SYNTAXE run_test"
     local num="$1" msg="$2"
+
+    # a-t-on défini une limite de temps ou faut-il utiliser celle par défaut ?
+    local maxdur=$MAXDUR
+    if [ $# = 3 ]
+    then maxdur="$3"
+    fi
 
     success		# terminer le test en cours s'il y a besoin
 
@@ -173,12 +208,18 @@ $num"
     fi
 
     # faut-il exécuter le test ?
-    if [ $TESTS_TOUS = vrai ] || echo "$TESTS_A_FAIRE" | grep -q "$regexp"
+    if [ $TESTS_TOUS != vrai ] && ! echo "$TESTS_A_FAIRE" | grep -q "$regexp"
+    then return 1	# sortir tout de suite, ne pas faire le test
+    fi
+
+    # ok, il faut faire le test. Le retirer des tests à faire
+    TESTS_A_FAIRE="$(echo "$TESTS_A_FAIRE" | grep -v "$regexp")"
+    TEST_EN_COURS="$num"
+
+    if [ "$DUREE" = vrai ]
     then
-	# retirer le test des tests à faire
-	TESTS_A_FAIRE="$(echo "$TESTS_A_FAIRE" | grep -v "$regexp")"
-	TEST_EN_COURS="$num"
-    else return 1	# sortir tout de suite, ne pas faire le test
+	DUREE_ESTIMEE=$((DUREE_ESTIMEE + maxdur))
+	return 1	# on ne fait pas le test, on ne compte que la durée
     fi
 
     if [ "$TERSE" != vrai ]
@@ -306,7 +347,7 @@ generer_fichier_aleatoire ()
 CMD_TIMEOUT=$(command -v -p timeout)
 if [ x"$CMD_TIMEOUT" = x ]
 then
-    # La commande timeout n'est pas POSIX, mais elle peut exister
+    # La commande timeout n'est pas POSIX, elle peut exister
     # sur certains systèmes (Linux, FreeBSD), mais pas sur d'autres
     # (ex : MacOS). Si elle n'existe pas : il faut la simuler
     timeout ()
@@ -331,7 +372,6 @@ then
 	wait $pidcmd
 	exitcmd=$?
 
-	
 	if [ "$exitcmd" -ge 127 ]	# commande terminée par un signal ?
 	then
 	    if ps_existe $pidsleep
@@ -588,8 +628,9 @@ TESTS_VUS=""			# les tests qu'on a déjà vus (pour cohérence)
 VERBOSE=faux			# affiche le détail d'un test
 TERSE=faux			# affichage des résultats des tests
 KEEP=rm				# nettoyer après le dernier test
+DUREE=faux			# ne pas faire les tests, mais estimer la durée
 
-while getopts "hvtk" opt
+while getopts "hvtkd" opt
 do
     case "$opt" in
 	(v)			# -v : verbose
@@ -601,8 +642,11 @@ do
 	(k)			# -k : keep
 	    KEEP=keep
 	    ;;
+	(d)
+	    DUREE=vrai		# -d : durée maximum estimée
+	    ;;
 	(h|*)			# -h : help ou *: non reconnu
-	    echo "usage: $0 [-h][-v][-t][-k] [num...]" >&2
+	    echo "usage: $0 [-h][-v][-t][-k][-d] [num...]" >&2
 	    echo "exemple : $0 -v 2.1 2.3" >&2
 	    exit 1
 	    ;;
