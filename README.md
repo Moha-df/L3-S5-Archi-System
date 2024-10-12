@@ -55,8 +55,8 @@ Pour en profiter au maximum :
   - ne cherchez pas à gérer de multiples branches
 
 Vous pouvez également consulter le résultat des tests en ligne,
-en vous rendant sur :
-    https://l3ase.pages.unistra.fr/_votre-nom-de-login_
+en vous rendant sur le lien **GitLab Pages** depuis la page
+d'accueil de ce dépôt.
 
 ## Scripts de test
 
