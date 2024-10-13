@@ -54,14 +54,14 @@ run_test 2.2 "resultat thrmutex" && {
 ##############################################################################
 # Test valgrind
 
-run_test 2.3 "valgrind thrmutex" && {
+run_test 2.3 "valgrind thrmutex" 10 && {
     tester_valgrind $PROG2
 }
 
 ##############################################################################
 # Comparaison des performances
 
-run_test 3.1 "comparaison des performances" && {
+run_test 3.1 "comparaison des performances" 10 && {
     $TIME -p $PROG  > /dev/null 2> $TMP.time1
     t1=$(duree $TMP.time1)
     $TIME -p $PROG2 > /dev/null 2> $TMP.time2
