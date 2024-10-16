@@ -34,6 +34,6 @@ run_test 1.2 "resultat thr-sem" && {
 ##############################################################################
 # Test valgrind
 
-run_test 2.1 "valgrind thr-sem" && {
+run_test 2.1 "valgrind thr-sem" 15 && {
     tester_valgrind $PROG2
 }

@@ -54,9 +54,8 @@ run_test 1.3 "longueur du titre" && {
 }
 
 run_test 1.4 "validité du fichier pour 'ranger'" && {
-    touch $TMP.bib
-    chmod 0 $TMP.bib
-    tester_erreur "répertoire" $PROG_RANGER $TMP.bib A 5
+    mkdir $TMP.bib
+    tester_erreur "fichier invalide" $PROG_RANGER $TMP.bib A 5
 }
 
 run_test 1.5 "arguments de sortir" && {
@@ -65,9 +64,8 @@ run_test 1.5 "arguments de sortir" && {
 }
 
 run_test 1.6 "validité du fichier pour 'sortir'" && {
-    touch $TMP.bib
-    chmod 0 $TMP.bib
-    tester_erreur "répertoire" $PROG_SORTIR $TMP.bib A
+    mkdir $TMP.bib
+    tester_erreur "fichier invalide" $PROG_SORTIR $TMP.bib A
 }
 
 ##############################################################################

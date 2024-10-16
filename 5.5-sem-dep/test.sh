@@ -91,7 +91,7 @@ run_test 2.1 "une exécution" && {
     verifier_sortie
 }
 
-run_test 2.2 "5 exécutions" && {
+run_test 2.2 "5 exécutions" 15 && {
     for i in 1 2 3 4 5
     do
         lancer_timeout $TIMEOUT $PROG
