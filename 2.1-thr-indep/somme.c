@@ -27,7 +27,7 @@ void *calculate_sum(void *arg) {
 int main(int argc, char *argv[])
 {
     long int n, p;
-    long int somme;
+    long int somme = 0;
 
     if(argc != 3){
         fprintf(stderr, "usage : %s <n> <p>\n", argv[0]);
