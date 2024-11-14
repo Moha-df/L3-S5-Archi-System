@@ -66,10 +66,6 @@ int main(int argc, char *argv[])
     }
 
 
-    
-
-
-
     printf("%ld\n", somme);
     printf("(attendu : %ld)\n", n * p * (n * p + 1) / 2);
 
