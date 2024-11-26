@@ -42,9 +42,20 @@ void tache(int i)
     printf("%d\n", i);
 }
 
+
 int main(int argc, char *argv[])
 {
     if (argc != 1)
         usage(argv[0]);
+
+
+    pthread_t threads;
+
+    pthread_create(&threads, NULL, tache, (void*)1);
+
+
+    pthread_join(threads, NULL);
+
+
     exit(0);
 }
