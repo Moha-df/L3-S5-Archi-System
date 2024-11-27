@@ -36,12 +36,21 @@ noreturn void usage(const char *argv0)
     exit(1);
 }
 
+typedef struct {
+    int num_thread;           // Numéro du thread
+    int *elu;                 // Indique quel thread est élu
+    pthread_barrier_t *bar;   // Barrière de synchronisation
+} ThreadArg;
+
 void *thread(void *arg)
 {
-    int numthr = -1; // à modifier
-    int elu = 0;     // par défaut : personne n'est élu
+    ThreadArg *targ = (ThreadArg *)arg;
 
-    printf("Thread %d%s\n", numthr, elu ? ", je suis élu" : "");
+    // Attendre le signal du départ
+    pthread_barrier_wait(targ->bar);
+
+
+    printf("Thread %d%s\n", targ->num_thread, targ->elu ? ", je suis élu" : "");
 
     return NULL;
 }
@@ -56,11 +65,50 @@ int main(int argc, char *argv[])
     if (n < 0)
         usage(argv[0]);
 
+    pthread_t threads[n];
+    ThreadArg args[n];
+    pthread_barrier_t bar;
+    int elu;
+
+    // Initialiser la barrière pour n threads
+    if (pthread_barrier_init(&bar, NULL, n + 1) != 0) {
+        raler("pthread_barrier_init");
+    }
+
+    // Générer un numéro aléatoire pour l'élu
+    srand(time(NULL));
+    elu = rand() % n;
+
+    // Créer les threads
+    for (int i = 0; i < n; i++) {
+        args[i].num_thread = i;
+        args[i].elu = 0;
+        if(i==elu){args[i].elu = &elu;}
+        args[i].bar = &bar;
+
+        if (pthread_create(&threads[i], NULL, thread, &args[i]) != 0) {
+            raler("pthread_create");
+        }
+    }
+
     // prêt ? attendre une ligne (éventuellement vide)
     printf("Saisie au clavier : ");
     (void)getchar();
 
-    // partez !
+    // Libérer les threads via la barrière
+    pthread_barrier_wait(&bar);
+
+    // Attendre la fin de tous les threads
+    for (int i = 0; i < n; i++) {
+        if (pthread_join(threads[i], NULL) != 0) {
+            raler("pthread_join");
+        }
+    }
+
+        // Détruire la barrière
+    pthread_barrier_destroy(&bar);
+    free(threads);
+
 
     // à n'afficher que lorsqu'on attendu que tous les threads soient terminés
     printf("Terminé\n");
