@@ -36,15 +36,23 @@ noreturn void usage(char *argv0)
     exit(1);
 }
 
+typedef struct
+{
+    sem_t *sem;
+    int numT;
+} Targs;
+
 void *fonction(void *arg)
 {
-    int moi;
-
-    (void)arg; // TODO à supprimer
-    moi = 0;   // TODO remplacer par le num de thread
+    Targs *targs = (Targs *)arg;
+    sem_t *sem = targs->sem;  // Récupérer le sémaphore passé comme argument
+    int moi = targs->numT;   // Utiliser l'ID du thread pour identifier ce thread
 
     printf("thread %d : je dors\n", moi);
+
     // TODO attendre l'événement transmis par le thread principal
+    sem_wait(sem);
+
     printf("thread %d : ah... bien dormi !\n", moi);
 
     return NULL;
@@ -61,24 +69,41 @@ int main(int argc, char *argv[])
     if (nthr <= 0)
         usage(argv[0]);
 
+    sem_t sem;
+    sem_init(&sem, 0, 0);  // Initialiser le sémaphore à 0 pour que les threads attendent
+
+    pthread_t threads[nthr];
+    Targs targs[nthr]; // Créer un tableau de structures pour chaque thread
+
+    
     for (int i = 0; i < nthr; i++)
     {
-        // TODO créer les threads
+        targs[i].sem = &sem;      // Passer le sémaphore aux threads
+        targs[i].numT = i;        // Passer l'ID du thread
+       CHK(pthread_create(&threads[i], NULL, fonction, (void *)&targs[i]));
     }
 
-    // attendre un caractère sur l'entrée standard (ou plus exactement
+    // attendre un caractère sur l'entrée standard (ou plus exactements
     // attendre le premier caractère d'une ligne complète)
     (void)getchar();
     printf("allez, debout !\n");
 
     // TODO réveiller les threads en attente
+    // Libérer le sémaphore pour réveiller tous les threads
+    for (int i = 0; i < nthr; i++)
+    {
+        sem_post(&sem);
+    }
 
     for (int i = 0; i < nthr; i++)
     {
-        // TODO attendre la terminaison des threads
+        CHK(pthread_join(threads[i], NULL));
     }
 
     printf("terminé\n");
+
+    sem_destroy(&sem);
+
 
     exit(0);
 }
