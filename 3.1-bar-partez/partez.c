@@ -107,7 +107,6 @@ int main(int argc, char *argv[])
 
         // Détruire la barrière
     pthread_barrier_destroy(&bar);
-    free(threads);
 
 
     // à n'afficher que lorsqu'on attendu que tous les threads soient terminés
