@@ -41,6 +41,19 @@ noreturn void usage(char *argv0)
 
 long int compteur; // compteur global
 
+sem_t sem; // Sémaphore pour exclusion mutuelle
+
+
+
+void* func(){
+    for (int i = 0; i < TOURS; i++) {
+        sem_wait(&sem);  // Prendre le sémaphore (entrer dans la section critique)
+        compteur++;
+        sem_post(&sem);  // Libérer le sémaphore (sortir de la section critique)
+    }
+    return NULL;
+}
+
 int main(int argc, char *argv[])
 {
     pthread_t tid[NTHREAD];
@@ -48,6 +61,22 @@ int main(int argc, char *argv[])
     if (argc != 1)
         usage(argv[0]);
 
+    // Initialisation du sémaphore
+    sem_init(&sem, 0, 1);  // 1 est la valeur initiale du sémaphore
+
+    pthread_create(&tid[0], NULL, func, NULL);
+    pthread_create(&tid[1], NULL, func, NULL);
+    pthread_create(&tid[2], NULL, func, NULL);
+    pthread_create(&tid[3], NULL, func, NULL);
+
+    pthread_join(tid[0], NULL);
+    pthread_join(tid[1], NULL);
+    pthread_join(tid[2], NULL);
+    pthread_join(tid[3], NULL);
+
     printf("%ld\n", compteur);
+
+    sem_destroy(&sem);
+
     exit(0);
 }
